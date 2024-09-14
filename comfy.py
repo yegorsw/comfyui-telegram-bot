@@ -26,18 +26,19 @@ def save_image(image_info, filename):
 def get_first_item(input_dict: dict):
     return list(input_dict.values())[0]
 
-def generate_image(positive1:str, negative1="", model="zavychromaxl_v21.safetensors", steps=45, seed=0, cfg=6):
+#Juggernaut_X_RunDiffusion_Hyper.safetensors
+#zavychromaxl_v21.safetensors
+#Juggernaut-X-RunDiffusion-NSFW.safetensors
+#Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors
+
+def generate_image(positive1:str, negative1="", model="Juggernaut-X-RunDiffusion-NSFW.safetensors", steps=45, seed=0, cfg=6):
     json_data = None
-    with open('workflow_telegram.json', 'r') as file:
+    with open('workflow_flux_ollama.json', 'r') as file:
         json_data = json.load(file)
     
-    json_data["1"]["inputs"]["ckpt_name"] = model
-    json_data["39"]["inputs"]["text"] = positive1
-    json_data["39"]["inputs"]["noise_seed"] = seed
-    json_data["16"]["inputs"]["text"] = negative1
-    json_data["9"]["inputs"]["steps"] = steps
-    json_data["9"]["inputs"]["seed"] = seed
-    json_data["9"]["inputs"]["cfg"] = cfg
+    json_data["67"]["inputs"]["string"] = positive1
+    json_data["25"]["inputs"]["noise_seed"] = seed
+    json_data["79"]["inputs"]["seed"] = seed
 
     prompt_submit_data = queue_prompt(json_data)
     prompt_id = prompt_submit_data["prompt_id"]
