@@ -33,7 +33,7 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """Generate an image based on the user's description."""
     user_prompt = update.message.text  # The user's message text
 
-    img_data = comfy.generate_image(user_prompt, "nsfw, signature, watermark", seed=update.message.message_id)
+    img_data = comfy.generate_image(user_prompt, seed=update.message.message_id)
     filename = "images/" + img_data["filename"]
     comfy.save_image(img_data, filename)
 

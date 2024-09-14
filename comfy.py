@@ -26,12 +26,7 @@ def save_image(image_info, filename):
 def get_first_item(input_dict: dict):
     return list(input_dict.values())[0]
 
-#Juggernaut_X_RunDiffusion_Hyper.safetensors
-#zavychromaxl_v21.safetensors
-#Juggernaut-X-RunDiffusion-NSFW.safetensors
-#Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors
-
-def generate_image(positive1:str, negative1="", model="Juggernaut-X-RunDiffusion-NSFW.safetensors", steps=45, seed=0, cfg=6):
+def generate_image(positive1:str, seed=0):
     json_data = None
     with open('workflow_flux_ollama.json', 'r') as file:
         json_data = json.load(file)
@@ -45,19 +40,6 @@ def generate_image(positive1:str, negative1="", model="Juggernaut-X-RunDiffusion
     generated_image_data = wait_for_image(prompt_id)
     img_folder_info = get_first_item(generated_image_data["outputs"])["images"][0]
     return img_folder_info
-
-def upload_image(image_path):
-    with open(image_path, 'rb') as f:
-        image_data = f.read()
-        files = {
-            'image': (os.path.basename(image_path), image_data, 'image/png')
-        }
-        response = requests.post("http://localhost:8188/upload/image", files=files)
-        return response
-
-
-
-
 
 if __name__ == "__main__":
     pos1 = "giant robot in a field, looking up at the dark night sky"
