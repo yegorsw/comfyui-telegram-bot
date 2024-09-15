@@ -1,52 +1,54 @@
 import json
 import requests
 import uuid
-import os, time
-import websocket
+import time
 
-def queue_prompt(prompt):
-    p = {"prompt": prompt, "client_id": str(uuid.uuid4())}
-    response = requests.post("http://127.0.0.1:8188/prompt", json=p)
-    return response.json()
+def get_first_item(input_dict):
+        return next(iter(input_dict.values()))
 
-def wait_for_image(prompt_id):
-    print("Waiting for image to be generated..")
-    while True:
-        response = requests.get("http://localhost:8188/history")
-        try:
-            return response.json()[prompt_id]
-        except KeyError:
-            time.sleep(1)
+class ComfyClient:
+    def __init__(self, workflow_file='workflow_flux_ollama.json', base_url='http://127.0.0.1:8188'):
+        self.workflow_file = workflow_file
+        self.base_url = base_url
+        # Load the workflow JSON data once during initialization
+        with open(self.workflow_file, 'r') as file:
+            self.json_data = json.load(file)
 
-def save_image(image_info, filename):
-    response = requests.get("http://localhost:8188/view", params=image_info)
-    with open(filename, 'wb') as f:
-        f.write(response.content)
+    def queue_prompt(self, prompt):
+        payload = {"prompt": prompt, "client_id": str(uuid.uuid4())}
+        response = requests.post(f"{self.base_url}/prompt", json=payload)
+        return response.json()
 
-def get_first_item(input_dict: dict):
-    return list(input_dict.values())[0]
+    def wait_for_image(self, prompt_id):
+        print("Waiting for image to be generated...")
+        while True:
+            response = requests.get(f"{self.base_url}/history")
+            try:
+                return response.json()[prompt_id]
+            except KeyError:
+                time.sleep(1)
 
-def generate_image(positive1:str, seed=0):
-    json_data = None
-    with open('workflow_flux_ollama.json', 'r') as file:
-        json_data = json.load(file)
-    
-    json_data["67"]["inputs"]["string"] = positive1
-    json_data["25"]["inputs"]["noise_seed"] = seed
-    json_data["79"]["inputs"]["seed"] = seed
+    def save_image(self, image_info, filename):
+        response = requests.get(f"{self.base_url}/view", params=image_info)
+        with open(filename, 'wb') as f:
+            f.write(response.content)
+        print(f"Image saved as {filename}")
 
-    prompt_submit_data = queue_prompt(json_data)
-    prompt_id = prompt_submit_data["prompt_id"]
-    generated_image_data = wait_for_image(prompt_id)
-    img_folder_info = get_first_item(generated_image_data["outputs"])["images"][0]
-    return img_folder_info
+    def generate_image(self, positive_prompt, seed=0):
+        # Update the JSON data with the new prompt and seed
+        self.json_data["67"]["inputs"]["string"] = positive_prompt
+        self.json_data["25"]["inputs"]["noise_seed"] = seed
+        self.json_data["79"]["inputs"]["seed"] = seed
+
+        prompt_submit_data = self.queue_prompt(self.json_data)
+        prompt_id = prompt_submit_data["prompt_id"]
+        generated_image_data = self.wait_for_image(prompt_id)
+        img_info = self.get_first_item(generated_image_data["outputs"])["images"][0]
+        return img_info
 
 if __name__ == "__main__":
-    pos1 = "giant robot in a field, looking up at the dark night sky"
-    #pos2 = "classic illustration, scifi illustration, John Berkey, grand, humans for scale, Vincent Di Fate, Paul Lehr, simon stalenhag"
-    #neg1 = "watermark, nsfw, hdr, cropped, blurry, draft, centered, front view, text, words"
-    #generate_image(pos1, pos2, neg1, steps=50, filepath="wungus.png", model="sdxl_protovision.safetensors", lora="ClassipeintXL.safetensors")
-    img = generate_image(pos1)
-    #{'filename': 'ComfyUI_temp_eauln_00001_.png', 'subfolder': '', 'type': 'temp'}
-    filename = img["filename"]
-    save_image(img, filename)
+    positive_prompt = "giant robot in a field, looking up at the dark night sky"
+    client = ComfyClient()
+    image_info = client.generate_image(positive_prompt)
+    filename = image_info["filename"]
+    client.save_image(image_info, filename)
