@@ -43,7 +43,7 @@ class ComfyClient:
         prompt_submit_data = self.queue_prompt(self.json_data)
         prompt_id = prompt_submit_data["prompt_id"]
         generated_image_data = self.wait_for_image(prompt_id)
-        img_info = self.get_first_item(generated_image_data["outputs"])["images"][0]
+        img_info = get_first_item(generated_image_data["outputs"])["images"][0]
         return img_info
 
 if __name__ == "__main__":
