@@ -14,7 +14,8 @@ from comfy import ComfyClient  # Updated import
 
 # Enable logging
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s", 
+    level=logging.INFO
 )
 # Set higher logging level for httpx to avoid all GET and POST requests being logged
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -34,16 +35,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Hi! Send me an image description and I will generate it for you."
     )
 
-
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Echo the user message, but reversed."""
-    reversed_text = update.message.text[::-1]
-    await update.message.reply_text(reversed_text)
-
-
 async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Generate an image based on the user's description."""
     user_prompt = update.message.text  # The user's message text
+
+    logging.info(f"Received prompt from user {update.effective_user.username}: {user_prompt}")
 
     # Generate the image using ComfyClient
     img_data = comfy_client.generate_image(

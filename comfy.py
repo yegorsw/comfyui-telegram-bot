@@ -2,6 +2,7 @@ import json
 import requests
 import uuid
 import time
+import logging
 
 def get_first_item(input_dict):
         return next(iter(input_dict.values()))
@@ -20,7 +21,7 @@ class ComfyClient:
         return response.json()
 
     def wait_for_image(self, prompt_id):
-        print("Waiting for image to be generated...")
+        logging.debug("Generating image.")
         while True:
             response = requests.get(f"{self.base_url}/history")
             try:
@@ -32,7 +33,7 @@ class ComfyClient:
         response = requests.get(f"{self.base_url}/view", params=image_info)
         with open(filename, 'wb') as f:
             f.write(response.content)
-        print(f"Image saved as {filename}")
+        logging.debug(f"Image saved as {filename}")
 
     def generate_image(self, positive_prompt, seed=0):
         # Update the JSON data with the new prompt and seed
@@ -46,9 +47,3 @@ class ComfyClient:
         img_info = get_first_item(generated_image_data["outputs"])["images"][0]
         return img_info
 
-if __name__ == "__main__":
-    positive_prompt = "giant robot in a field, looking up at the dark night sky"
-    client = ComfyClient()
-    image_info = client.generate_image(positive_prompt)
-    filename = image_info["filename"]
-    client.save_image(image_info, filename)
